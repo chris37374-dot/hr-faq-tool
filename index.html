@@ -406,8 +406,10 @@ async function loadData() {
     // Try with 已發布 filter first; if empty, fetch all
     let pages = await fetchAll();
     if (pages.length === 0) {
-      // fallback: no filter (shows drafts too, useful during setup)
       pages = await fetchAllNoFilter();
+    }
+    if (!Array.isArray(pages)) {
+      throw new Error('API 回傳格式錯誤：' + JSON.stringify(pages).substring(0, 200));
     }
     allData = pages.map(parseRecord).filter(r => r.question);
     buildFilters();
@@ -437,7 +439,8 @@ async function fetchAllNoFilter() {
     });
     if (!res.ok) throw new Error(`Notion API 錯誤 ${res.status}`);
     const data = await res.json();
-    results = results.concat(data.results);
+    if (data.object === 'error') throw new Error(data.message || JSON.stringify(data));
+    results = results.concat(data.results || []);
     if (!data.has_more) break;
     cursor = data.next_cursor;
   }
