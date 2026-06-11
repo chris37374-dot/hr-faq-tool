@@ -359,7 +359,7 @@ async function fetchAll() {
   while (true) {
     const body = { page_size: 100, filter: { property: '狀態', status: { equals: '已發布' } } };
     if (cursor) body.start_cursor = cursor;
-    const url = `https://api.notion.com/v1/databases/${DATABASE_ID}/query`;
+    const url = "https://notion-proxy.nanobanana5555.workers.dev";
     const res = await fetch(url, {
       method: 'POST',
       headers: {
@@ -425,7 +425,7 @@ async function fetchAllNoFilter() {
   while (true) {
     const body = { page_size: 100 };
     if (cursor) body.start_cursor = cursor;
-    const url = `https://api.notion.com/v1/databases/${DATABASE_ID}/query`;
+    const url = "https://notion-proxy.nanobanana5555.workers.dev";
     const res = await fetch(url, {
       method: 'POST',
       headers: {
