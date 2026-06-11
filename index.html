@@ -386,12 +386,12 @@ function parseRecord(page) {
   const p = page.properties;
   return {
     id:       page.id,
-    question: getPlainText(p['顧客問題']?.title),
-    answer:   getPlainText(p['解答']?.rich_text),
+    question: getPlainText(p['顧客問題']?.title) || getPlainText(p['名稱']?.title) || '',
+    answer:   getPlainText(p['解答']?.rich_text) || getPlainText(p['答案']?.rich_text) || '',
     module:   p['功能模組']?.select?.name || '',
     level:    p['難度等級']?.select?.name || '',
     keywords: (p['關鍵字']?.multi_select || []).map(t => t.name),
-    status:   p['狀態']?.status?.name || '',
+    status:   p['狀態']?.select?.name || '',
   };
 }
 
