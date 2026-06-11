@@ -357,14 +357,14 @@ let activeModule = 'all';
 async function fetchAll() {
   let results = [], cursor = undefined;
   while (true) {
-    const body = { page_size: 100, filter: { property: '狀態', status: { equals: '已發布' } } };
+    const body = { page_size: 100, filter: { property: '狀態', select: { equals: '已發布' } } };
     if (cursor) body.start_cursor = cursor;
     const url = "https://notion-proxy.nanobanana5555.workers.dev";
     const res = await fetch(url, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${NOTION_TOKEN}`,
-        'Notion-Version': '2025-09-03',
+        'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
@@ -432,7 +432,7 @@ async function fetchAllNoFilter() {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${NOTION_TOKEN}`,
-        'Notion-Version': '2025-09-03',
+        'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(body)
