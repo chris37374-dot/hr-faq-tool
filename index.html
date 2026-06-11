@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR FAQ 快查工具</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --surface: #1a1d27;
+    --surface2: #222536;
+    --border: #2e3148;
+    --accent: #5b6af0;
+    --accent-dim: #3d4ab0;
+    --text: #e8eaf6;
+    --text-dim: #8b90b8;
+    --text-muted: #555a7a;
+    --green: #4caf7d;
+    --green-bg: #0d2a1c;
+    --amber: #f0a050;
+    --amber-bg: #2a1a06;
+    --red: #f05555;
+    --red-bg: #2a0d0d;
+    --tag-bg: #252840;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Segoe UI', 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0;
+  }
+  .header-title { font-size: 16px; font-weight: 700; letter-spacing: 0.02em; }
+  .header-sub { font-size: 12px; color: var(--text-muted); margin-top: 1px; }
+  .sync-btn {
+    margin-left: auto;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.2s;
+  }
+  .sync-btn:hover { border-color: var(--accent); color: var(--text); }
+  .sync-btn.syncing { opacity: 0.6; pointer-events: none; }
+  .sync-icon { font-size: 14px; }
+  .sync-icon.spin { animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Search bar ── */
+  .search-wrap {
+    padding: 20px 24px 0;
+    max-width: 860px;
+    margin: 0 auto;
+  }
+  .search-box {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  .search-icon {
+    position: absolute; left: 14px;
+    color: var(--text-muted); font-size: 16px; pointer-events: none;
+  }
+  #searchInput {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 13px 14px 13px 42px;
+    color: var(--text);
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  #searchInput:focus { border-color: var(--accent); }
+  #searchInput::placeholder { color: var(--text-muted); }
+  .clear-btn {
+    position: absolute; right: 12px;
+    background: none; border: none;
+    color: var(--text-muted); font-size: 18px;
+    cursor: pointer; display: none;
+    padding: 4px;
+    line-height: 1;
+  }
+  .clear-btn.show { display: block; }
+
+  /* ── Filters ── */
+  .filters {
+    padding: 12px 24px 0;
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .filter-chip {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-chip:hover { border-color: var(--accent); color: var(--text); }
+  .filter-chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+
+  /* ── Stats bar ── */
+  .stats-bar {
+    padding: 12px 24px 0;
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .result-count { font-size: 13px; color: var(--text-muted); }
+  .result-count span { color: var(--accent); font-weight: 600; }
+
+  /* ── Results ── */
+  .results {
+    padding: 12px 24px 32px;
+    max-width: 860px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: border-color 0.15s;
+  }
+  .card:hover { border-color: #3d4060; }
+
+  .card-header {
+    padding: 14px 16px;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-header:hover { background: rgba(255,255,255,0.02); }
+
+  .badge-module {
+    flex-shrink: 0;
+    padding: 3px 9px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--accent-dim);
+    color: #a8b4ff;
+    margin-top: 1px;
+    white-space: nowrap;
+  }
+
+  .card-q {
+    flex: 1;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.5;
+    color: var(--text);
+  }
+
+  .card-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .badge-level {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .level-general { background: var(--green-bg); color: var(--green); }
+  .level-tech    { background: var(--amber-bg); color: var(--amber); }
+  .level-escalate{ background: var(--red-bg);   color: var(--red); }
+
+  .chevron {
+    color: var(--text-muted);
+    font-size: 12px;
+    transition: transform 0.2s;
+  }
+  .card.open .chevron { transform: rotate(180deg); }
+
+  /* ── Card body ── */
+  .card-body {
+    display: none;
+    padding: 0 16px 16px;
+    border-top: 1px solid var(--border);
+  }
+  .card.open .card-body { display: block; }
+
+  .answer-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin: 12px 0 8px;
+  }
+
+  .answer-text {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #c8cce8;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+
+  .escalate-banner {
+    background: var(--red-bg);
+    border: 1px solid #5a1a1a;
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--red);
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .tag {
+    background: var(--tag-bg);
+    color: var(--text-muted);
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+
+  .copy-btn {
+    margin-top: 14px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text-dim);
+    padding: 7px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .copy-btn:hover { border-color: var(--accent); color: var(--text); }
+  .copy-btn.copied { border-color: var(--green); color: var(--green); }
+
+  /* ── Empty / Loading ── */
+  .state-box {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text-muted);
+  }
+  .state-icon { font-size: 40px; margin-bottom: 12px; }
+  .state-title { font-size: 15px; font-weight: 600; color: var(--text-dim); margin-bottom: 6px; }
+  .state-sub { font-size: 13px; line-height: 1.6; }
+
+  /* highlight */
+  mark {
+    background: rgba(91, 106, 240, 0.3);
+    color: #a8b4ff;
+    border-radius: 2px;
+    padding: 0 1px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🔍</div>
+  <div>
+    <div class="header-title">HR FAQ 快查工具</div>
+    <div class="header-sub">震旦客服技術組</div>
+  </div>
+  <button class="sync-btn" id="syncBtn" onclick="loadData()">
+    <span class="sync-icon" id="syncIcon">↻</span> 重新載入
+  </button>
+</header>
+
+<div class="search-wrap">
+  <div class="search-box">
+    <span class="search-icon">🔎</span>
+    <input type="text" id="searchInput" placeholder="輸入關鍵字，例如：打卡、排班、薪資、LINE 綁定…" autocomplete="off">
+    <button class="clear-btn" id="clearBtn" onclick="clearSearch()">✕</button>
+  </div>
+</div>
+
+<div class="filters" id="filterRow">
+  <button class="filter-chip active" data-module="all">全部</button>
+</div>
+
+<div class="stats-bar">
+  <div class="result-count" id="resultCount"></div>
+</div>
+
+<div class="results" id="results"></div>
+
+<script>
+const NOTION_TOKEN = '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';
+const DATABASE_ID  = '37cb673a87298001a825f30efdb2c0c3';
+const PROXY = '';
+
+let allData = [];
+let activeModule = 'all';
+
+// ── Fetch all pages (handle pagination) ──────────────────────────
+async function fetchAll() {
+  let results = [], cursor = undefined;
+  while (true) {
+    const body = { page_size: 100, filter: { property: '狀態', status: { equals: '已發布' } } };
+    if (cursor) body.start_cursor = cursor;
+    const url = `https://api.notion.com/v1/databases/${DATABASE_ID}/query`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${NOTION_TOKEN}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(`Notion API 錯誤 ${res.status}`);
+    const data = await res.json();
+    results = results.concat(data.results);
+    if (!data.has_more) break;
+    cursor = data.next_cursor;
+  }
+  return results;
+}
+
+function getPlainText(richText) {
+  return (richText || []).map(t => t.plain_text).join('');
+}
+
+function parseRecord(page) {
+  const p = page.properties;
+  return {
+    id:       page.id,
+    question: getPlainText(p['顧客問題']?.title),
+    answer:   getPlainText(p['解答']?.rich_text),
+    module:   p['功能模組']?.select?.name || '',
+    level:    p['難度等級']?.select?.name || '',
+    keywords: (p['關鍵字']?.multi_select || []).map(t => t.name),
+    status:   p['狀態']?.status?.name || '',
+  };
+}
+
+async function loadData() {
+  const btn  = document.getElementById('syncBtn');
+  const icon = document.getElementById('syncIcon');
+  btn.classList.add('syncing');
+  icon.classList.add('spin');
+  showState('loading');
+
+  try {
+    // Try with 已發布 filter first; if empty, fetch all
+    let pages = await fetchAll();
+    if (pages.length === 0) {
+      // fallback: no filter (shows drafts too, useful during setup)
+      pages = await fetchAllNoFilter();
+    }
+    allData = pages.map(parseRecord).filter(r => r.question);
+    buildFilters();
+    render();
+  } catch (e) {
+    showState('error', e.message);
+  } finally {
+    btn.classList.remove('syncing');
+    icon.classList.remove('spin');
+  }
+}
+
+async function fetchAllNoFilter() {
+  let results = [], cursor = undefined;
+  while (true) {
+    const body = { page_size: 100 };
+    if (cursor) body.start_cursor = cursor;
+    const url = `https://api.notion.com/v1/databases/${DATABASE_ID}/query`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${NOTION_TOKEN}`,
+        'Notion-Version': '2022-06-28',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(body)
+    });
+    if (!res.ok) throw new Error(`Notion API 錯誤 ${res.status}`);
+    const data = await res.json();
+    results = results.concat(data.results);
+    if (!data.has_more) break;
+    cursor = data.next_cursor;
+  }
+  return results;
+}
+
+// ── Filters ──────────────────────────────────────────────────────
+function buildFilters() {
+  const modules = [...new Set(allData.map(r => r.module).filter(Boolean))].sort();
+  const row = document.getElementById('filterRow');
+  row.innerHTML = `<button class="filter-chip active" data-module="all">全部</button>`;
+  modules.forEach(m => {
+    const btn = document.createElement('button');
+    btn.className = 'filter-chip';
+    btn.dataset.module = m;
+    btn.textContent = m;
+    row.appendChild(btn);
+  });
+  row.querySelectorAll('.filter-chip').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeModule = btn.dataset.module;
+      row.querySelectorAll('.filter-chip').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      render();
+    });
+  });
+}
+
+// ── Search & render ───────────────────────────────────────────────
+function getQuery() { return document.getElementById('searchInput').value.trim(); }
+
+function matches(record, query) {
+  if (!query) return true;
+  const q = query.toLowerCase();
+  return record.question.toLowerCase().includes(q)
+    || record.answer.toLowerCase().includes(q)
+    || record.keywords.some(k => k.toLowerCase().includes(q))
+    || record.module.toLowerCase().includes(q);
+}
+
+function highlight(text, query) {
+  if (!query) return escHtml(text);
+  const escaped = query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return escHtml(text).replace(new RegExp(escaped, 'gi'), m => `<mark>${m}</mark>`);
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function levelClass(level) {
+  if (level.includes('一般')) return 'level-general';
+  if (level.includes('升級')) return 'level-escalate';
+  return 'level-tech';
+}
+
+function render() {
+  const query   = getQuery();
+  const results = allData.filter(r =>
+    (activeModule === 'all' || r.module === activeModule) && matches(r, query)
+  );
+
+  document.getElementById('clearBtn').className = query ? 'clear-btn show' : 'clear-btn';
+
+  const countEl = document.getElementById('resultCount');
+  if (allData.length === 0) {
+    countEl.innerHTML = '';
+  } else {
+    countEl.innerHTML = query || activeModule !== 'all'
+      ? `找到 <span>${results.length}</span> 筆 / 共 ${allData.length} 筆`
+      : `共 <span>${allData.length}</span> 筆資料`;
+  }
+
+  const container = document.getElementById('results');
+  if (results.length === 0 && allData.length > 0) {
+    container.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">🔍</div>
+        <div class="state-title">找不到符合的結果</div>
+        <div class="state-sub">試試其他關鍵字，或切換功能模組篩選</div>
+      </div>`;
+    return;
+  }
+
+  container.innerHTML = results.map((r, i) => `
+    <div class="card" id="card-${i}">
+      <div class="card-header" onclick="toggleCard(${i})">
+        <span class="badge-module">${escHtml(r.module || '—')}</span>
+        <span class="card-q">${highlight(r.question, query)}</span>
+        <div class="card-right">
+          <span class="badge-level ${levelClass(r.level)}">${escHtml(r.level || '—')}</span>
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="card-body">
+        ${r.level.includes('升級') ? `
+          <div class="escalate-banner">
+            ⚠️ 此問題需升級處理，請轉接技術客服或回報主管
+          </div>` : ''}
+        <div class="answer-label">標準解答</div>
+        <div class="answer-text">${highlight(r.answer, query)}</div>
+        ${r.keywords.length ? `
+          <div class="tags-row">
+            ${r.keywords.map(k => `<span class="tag">${escHtml(k)}</span>`).join('')}
+          </div>` : ''}
+        <button class="copy-btn" id="copy-${i}" onclick="copyAnswer(${i}, '${escAttr(r.answer)}')">
+          📋 複製解答
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function escAttr(s) {
+  return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n');
+}
+
+function toggleCard(i) {
+  document.getElementById(`card-${i}`).classList.toggle('open');
+}
+
+function copyAnswer(i, answer) {
+  const text = answer.replace(/\\n/g, '\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById(`copy-${i}`);
+    btn.textContent = '✅ 已複製';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = '📋 複製解答'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  render();
+}
+
+function showState(type, msg) {
+  const container = document.getElementById('results');
+  document.getElementById('resultCount').innerHTML = '';
+  if (type === 'loading') {
+    container.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">⏳</div>
+        <div class="state-title">載入中…</div>
+        <div class="state-sub">正在從 Notion 讀取資料</div>
+      </div>`;
+  } else if (type === 'error') {
+    container.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">❌</div>
+        <div class="state-title">載入失敗</div>
+        <div class="state-sub">${escHtml(msg || '')}<br><br>請確認 Notion Integration 已授權此資料庫，然後點「重新載入」</div>
+      </div>`;
+  }
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', render);
+document.addEventListener('DOMContentLoaded', loadData);
+</script>
+</body>
+</html>
