@@ -346,7 +346,7 @@
 <div class="results" id="results"></div>
 
 <script>
-const NOTION_TOKEN = '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';
+const NOTION_TOKEN = ''; // Token handled by Cloudflare Worker
 const DATABASE_ID  = '37cb673a-8729-8073-a176-cc7c2e09ab5a';
 const PROXY = '';
 
@@ -363,7 +363,6 @@ async function fetchAll() {
     const res = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${NOTION_TOKEN}`,
         'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json'
       },
@@ -431,7 +430,6 @@ async function fetchAllNoFilter() {
     const res = await fetch(url, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${NOTION_TOKEN}`,
         'Notion-Version': '2022-06-28',
         'Content-Type': 'application/json'
       },
