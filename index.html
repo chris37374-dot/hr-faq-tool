@@ -288,7 +288,6 @@
     font-size: 14px;
     line-height: 1.75;
     color: var(--text-dim);
-    white-space: pre-wrap;
     word-break: break-word;
   }
 
@@ -496,6 +495,14 @@ function hi(text, kw) {
   return esc(text).replace(re, m => `<mark>${m}</mark>`);
 }
 
+function fmtAnswer(text, kw) {
+  // Convert newlines to <br>, then highlight keywords
+  const escaped = kw
+    ? esc(text).replace(new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&'), 'gi'), m => `<mark>${m}</mark>`)
+    : esc(text);
+  return escaped.replace(/\n/g, '<br>');
+}
+
 const MOD_CLASS = {
   '出勤管理': 'mod-attendance',
   '薪資計算': 'mod-salary',
@@ -552,7 +559,7 @@ function render() {
       <div class="card-body">
 
         <div class="answer-label">解答</div>
-        <div class="answer-body">${hi(r.answer, kw)}</div>
+        <div class="answer-body">${fmtAnswer(r.answer, kw)}</div>
         ${r.note ? `<div class="answer-label" style="margin-top:10px;">備註</div><div class="answer-body" style="font-size:13px;color:var(--text-muted);">${hi(r.note, kw)}</div>` : ''}
         ${r.keywords.length ? `
           <div class="tags-row">${r.keywords.map(w=>`<span class="kw-tag">${esc(w)}</span>`).join('')}</div>` : ''}
