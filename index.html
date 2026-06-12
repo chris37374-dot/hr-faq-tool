@@ -216,10 +216,19 @@
     font-weight: 500;
     padding: 2px 7px;
     border-radius: 3px;
-    background: var(--accent-light);
-    color: var(--accent);
     white-space: nowrap;
   }
+  .mod-attendance  { background: #E8F4FD; color: #1971C2; }
+  .mod-salary      { background: #FFF0F6; color: #C2255C; }
+  .mod-hr          { background: #F3F0FF; color: #6741D9; }
+  .mod-system      { background: #E6FCF5; color: #0CA678; }
+  .mod-report      { background: #FFF9DB; color: #E67700; }
+  .mod-law         { background: #FFF5F5; color: #C92A2A; }
+  .mod-sign        { background: #EBF4FF; color: #1C7ED6; }
+  .mod-insurance   { background: #FFF4E6; color: #D9480F; }
+  .mod-sysrelated  { background: #E8F5E9; color: #2E7D32; }
+  .mod-ticket      { background: #FFF8E1; color: #F57F17; }
+  .mod-other       { background: #F1F3F5; color: #495057; }
 
   .card-q {
     flex: 1;
@@ -237,9 +246,7 @@
     border-radius: 3px;
     white-space: nowrap;
   }
-  .lv-general  { background: var(--green-bg);  color: var(--green); }
-  .lv-tech     { background: var(--amber-bg);  color: var(--amber); }
-  .lv-escalate { background: var(--red-bg);    color: var(--red); }
+
 
   .chevron {
     flex-shrink: 0;
@@ -422,7 +429,7 @@ function parse(page) {
     question: txt(p['顧客問題']?.title) || txt(p['名稱']?.title) || '',
     answer:   txt(p['解答']?.rich_text) || txt(p['答案']?.rich_text) || '',
     module:   p['功能模組']?.select?.name || '',
-    level:    p['難度等級']?.select?.name || '',
+    note:     (p['備註']?.rich_text || []).map(t => t.plain_text).join('') || '',
     keywords: (p['關鍵字']?.multi_select || []).map(t => t.name),
     status:   p['狀態']?.select?.name || '',
   };
@@ -489,11 +496,21 @@ function hi(text, kw) {
   return esc(text).replace(re, m => `<mark>${m}</mark>`);
 }
 
-function lvClass(lv) {
-  if (lv.includes('一般')) return 'lv-general';
-  if (lv.includes('升級')) return 'lv-escalate';
-  return 'lv-tech';
-}
+const MOD_CLASS = {
+  '出勤管理': 'mod-attendance',
+  '薪資計算': 'mod-salary',
+  '人事管理': 'mod-hr',
+  '共用設定': 'mod-system',
+  '報表輸出': 'mod-report',
+  '法規合規': 'mod-law',
+  '保險管理': 'mod-insurance',
+  '流程簽核': 'mod-sign',
+  '系統相關': 'mod-sysrelated',
+  '開單相關': 'mod-ticket',
+};
+function modClass(m) { return MOD_CLASS[m] || 'mod-other'; }
+
+
 
 function render() {
   const kw = q();
@@ -527,15 +544,15 @@ function render() {
   container.innerHTML = list.map((r, i) => `
     <div class="card" id="c${i}">
       <div class="card-head" onclick="toggle(${i})">
-        <span class="mod-tag">${esc(r.module || '—')}</span>
         <span class="card-q">${hi(r.question, kw)}</span>
-        <span class="level-tag ${lvClass(r.level)}">${esc(r.level || '—')}</span>
+        <span class="mod-tag ${modClass(r.module)}">${esc(r.module || '—')}</span>
         <span class="chevron">▼</span>
       </div>
       <div class="card-body">
-        ${r.level.includes('升級') ? `<div class="escalate-note">⚠️ 此問題需升級處理，請轉接技術客服或回報主管</div>` : ''}
+
         <div class="answer-label">解答</div>
         <div class="answer-body">${hi(r.answer, kw)}</div>
+        ${r.note ? `<div class="answer-label" style="margin-top:10px;">備註</div><div class="answer-body" style="font-size:13px;color:var(--text-muted);">${hi(r.note, kw)}</div>` : ''}
         ${r.keywords.length ? `
           <div class="tags-row">${r.keywords.map(w=>`<span class="kw-tag">${esc(w)}</span>`).join('')}</div>` : ''}
         <button class="copy-btn" id="cp${i}" onclick="copy(${i},\`${r.answer.replace(/`/g,'\\`')}\`)">
